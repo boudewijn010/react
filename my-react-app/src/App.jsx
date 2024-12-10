@@ -1,14 +1,55 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import MoodSelector from "./components/MoodSelector";
 import GenreSelector from "./components/GenreSelector";
 import { generatePlaylist, savePlaylist } from "./services/playlistService";
 import SpotifyIntegration from "./spotify-api";
+import SpotifyWebApi from "spotify-web-api-js";
+
+const spotifyApi = new SpotifyWebApi();
 
 function App() {
   const [mood, setMood] = useState(null);
   const [genres, setGenres] = useState([]);
   const [playlist, setPlaylist] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
+  const [token, setToken] = useState(null);
+
+  const CLIENT_ID = "ef913ac181c545858684acbc79de38f2";
+  const REDIRECT_URI = "http://localhost:5173/";
+  const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-read-private`;
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    let _token = window.localStorage.getItem("token");
+
+    if (!_token && hash) {
+      _token = hash.split("&")[0].split("=")[1];
+      window.localStorage.setItem("token", _token);
+      window.location.hash = ""; // Clear hash
+    }
+
+    if (_token) {
+      setToken(_token);
+      spotifyApi.setAccessToken(_token);
+      fetchPlaylists();
+    }
+  }, []);
+
+  const fetchPlaylists = async () => {
+    try {
+      console.log("Fetching Spotify playlists...");
+      const response = await spotifyApi.getUserPlaylists();
+      if (response.items) {
+        console.log("Fetched playlists:", response.items);
+        setSpotifyPlaylists(response.items);
+      } else {
+        console.error("No playlists found in API response.");
+      }
+    } catch (error) {
+      console.error("Error fetching playlists:", error);
+    }
+  };
 
   const handleMoodSelect = (selectedMood) => {
     setMood(selectedMood);
@@ -46,37 +87,38 @@ function App() {
 
   return (
     <div className="app">
-      <MoodSelector onMoodSelect={handleMoodSelect} />
-      <GenreSelector onGenreSelect={handleGenreSelect} />
-      <button onClick={handleGeneratePlaylist} disabled={isLoading}>
-        {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
-      </button>
-      {playlist && (
-        <div className="playlist">
-          <h2>Gegenereerde Afspeellijst</h2>
-          <ul>
-            {playlist.tracks.map((track) => (
-              <li key={track.id}>
-                {track.name} - {track.artist} ({track.genre})
-              </li>
-            ))}
-          </ul>
-          <button onClick={handleSavePlaylist} disabled={isLoading}>
-            {isLoading ? "Opslaan..." : "Afspeellijst Opslaan"}
+      {!token ? (
+        <a href={AUTH_URL} className="primary-button">
+          Login with Spotify
+        </a>
+      ) : (
+        <>
+          <MoodSelector onMoodSelect={handleMoodSelect} />
+          <GenreSelector onGenreSelect={handleGenreSelect} />
+          <button onClick={handleGeneratePlaylist} disabled={isLoading}>
+            {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
           </button>
-        </div>
+          {playlist && (
+            <div className="playlist">
+              <h2>Gegenereerde Afspeellijst</h2>
+              <ul>
+                {playlist.tracks.map((track) => (
+                  <li key={track.id}>
+                    {track.name} - {track.artist} ({track.genre})
+                  </li>
+                ))}
+              </ul>
+              <button onClick={handleSavePlaylist} disabled={isLoading}>
+                {isLoading ? "Opslaan..." : "Afspeellijst Opslaan"}
+              </button>
+            </div>
+          )}
+          <SpotifyIntegration playlists={spotifyPlaylists} />
+        </>
       )}
-      <SpotifyIntegration playlists={playlist ? [playlist] : []} />
+      {console.log("Playlists data:", spotifyPlaylists)}
     </div>
   );
 }
-
-const CLIENT_ID = "ef913ac181c545858684acbc79de38f2";
-const REDIRECT_URI = "http://localhost:5173/";
-const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-read-private`;
-
-<a href={AUTH_URL} className="primary-button">
-  Login with Spotify
-</a>;
 
 export default App;

@@ -1,38 +1,6 @@
-import React, { useState, useEffect } from "react";
-import SpotifyWebApi from "spotify-web-api-js";
+import PropTypes from "prop-types";
 
-const spotifyApi = new SpotifyWebApi();
-
-const SpotifyIntegration = () => {
-  const [playlists, setPlaylists] = useState([]);
-  const [token, setToken] = useState("");
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    let _token = window.localStorage.getItem("token");
-
-    if (!_token && hash) {
-      _token = hash.split("&")[0].split("=")[1];
-      window.localStorage.setItem("token", _token);
-      window.location.hash = ""; // Clear hash
-    }
-
-    if (_token) {
-      setToken(_token);
-      spotifyApi.setAccessToken(_token);
-      fetchPlaylists();
-    }
-  }, []);
-
-  const fetchPlaylists = async () => {
-    try {
-      const response = await spotifyApi.getUserPlaylists();
-      setPlaylists(response.items);
-    } catch (error) {
-      console.error("Error fetching playlists:", error);
-    }
-  };
-
+const SpotifyIntegration = ({ playlists }) => {
   return (
     <div className="playlist-section">
       <h2>Your Spotify Playlists</h2>
@@ -55,6 +23,20 @@ const SpotifyIntegration = () => {
       </div>
     </div>
   );
+};
+SpotifyIntegration.propTypes = {
+  playlists: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      images: PropTypes.arrayOf(
+        PropTypes.shape({
+          url: PropTypes.string,
+        })
+      ),
+      name: PropTypes.string.isRequired,
+      description: PropTypes.string,
+    })
+  ).isRequired,
 };
 
 export default SpotifyIntegration;
