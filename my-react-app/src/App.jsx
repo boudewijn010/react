@@ -36,6 +36,8 @@ function App() {
       spotifyApi.setAccessToken(_token);
       fetchPlaylists();
       fetchFeaturedPlaylists();
+    } else {
+      console.log("No token found, redirecting to login.");
     }
   }, []);
 
