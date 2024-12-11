@@ -50,7 +50,13 @@ function App() {
         console.error("No playlists found in API response.");
       }
     } catch (error) {
-      console.error("Error fetching playlists:", error);
+      if (error.status === 401) {
+        alert("Token is expired or invalid. Please login again.");
+        window.localStorage.removeItem("token");
+        setToken(null);
+      } else {
+        console.error("Error fetching playlists:", error);
+      }
     }
   };
 
@@ -59,7 +65,13 @@ function App() {
       const playlists = await fetchSpotifyData("browse/featured-playlists");
       setFeaturedPlaylists(playlists);
     } catch (error) {
-      console.error("Error fetching Spotify data:", error);
+      if (error.status === 401) {
+        alert("Token is expired or invalid. Please login again.");
+        window.localStorage.removeItem("token");
+        setToken(null);
+      } else {
+        console.error("Error fetching Spotify data:", error);
+      }
     }
   };
 
@@ -77,9 +89,15 @@ function App() {
       return;
     }
     setIsLoading(true);
-    const generatedPlaylist = await generatePlaylist(mood, genres);
-    setPlaylist(generatedPlaylist);
-    setIsLoading(false);
+    try {
+      const generatedPlaylist = await generatePlaylist(mood, genres);
+      setPlaylist(generatedPlaylist);
+    } catch (error) {
+      console.error("Error generating playlist:", error);
+      alert("Er is iets misgegaan bij het genereren van de afspeellijst.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSavePlaylist = async () => {
