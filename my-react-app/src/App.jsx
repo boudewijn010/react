@@ -4,6 +4,7 @@ import GenreSelector from "./components/GenreSelector";
 import { generatePlaylist, savePlaylist } from "./services/playlistService";
 import SpotifyIntegration from "./spotify-api";
 import SpotifyWebApi from "spotify-web-api-js";
+import { fetchSpotifyData } from "./api/spotify";
 
 const spotifyApi = new SpotifyWebApi();
 
@@ -14,6 +15,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
   const [token, setToken] = useState(null);
+  const [featuredPlaylists, setFeaturedPlaylists] = useState(null);
 
   const CLIENT_ID = "ef913ac181c545858684acbc79de38f2";
   const REDIRECT_URI = "http://localhost:5173/";
@@ -33,6 +35,7 @@ function App() {
       setToken(_token);
       spotifyApi.setAccessToken(_token);
       fetchPlaylists();
+      fetchFeaturedPlaylists();
     }
   }, []);
 
@@ -48,6 +51,15 @@ function App() {
       }
     } catch (error) {
       console.error("Error fetching playlists:", error);
+    }
+  };
+
+  const fetchFeaturedPlaylists = async () => {
+    try {
+      const playlists = await fetchSpotifyData("browse/featured-playlists");
+      setFeaturedPlaylists(playlists);
+    } catch (error) {
+      console.error("Error fetching Spotify data:", error);
     }
   };
 
@@ -114,6 +126,18 @@ function App() {
             </div>
           )}
           <SpotifyIntegration playlists={spotifyPlaylists} />
+          <div>
+            <h1>Spotify Featured Playlists</h1>
+            {featuredPlaylists ? (
+              <ul>
+                {featuredPlaylists.playlists.items.map((playlist) => (
+                  <li key={playlist.id}>{playlist.name}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>Loading...</p>
+            )}
+          </div>
         </>
       )}
       {console.log("Playlists data:", spotifyPlaylists)}
