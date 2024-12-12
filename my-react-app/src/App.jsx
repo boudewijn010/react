@@ -93,6 +93,7 @@ function App() {
     setIsLoading(true);
     try {
       const generatedPlaylist = await generatePlaylist(mood, genres);
+      console.log("Generated playlist:", generatedPlaylist); // Add logging
       setPlaylist(generatedPlaylist);
     } catch (error) {
       console.error("Error generating playlist:", error);
@@ -118,52 +119,70 @@ function App() {
     }
   };
 
-  return (
-    <div className="app">
-      {!token ? (
-        <a href={AUTH_URL} className="primary-button">
-          Login with Spotify
-        </a>
-      ) : (
-        <>
-          <MoodSelector onMoodSelect={handleMoodSelect} />
-          <GenreSelector onGenreSelect={handleGenreSelect} />
-          <button onClick={handleGeneratePlaylist} disabled={isLoading}>
-            {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
-          </button>
-          {playlist && (
-            <div className="playlist">
-              <h2>Gegenereerde Afspeellijst</h2>
-              <ul>
-                {playlist.tracks.map((track) => (
-                  <li key={track.id}>
-                    {track.name} - {track.artist} ({track.genre})
-                  </li>
-                ))}
-              </ul>
-              <button onClick={handleSavePlaylist} disabled={isLoading}>
-                {isLoading ? "Opslaan..." : "Afspeellijst Opslaan"}
-              </button>
-            </div>
-          )}
-          <SpotifyIntegration playlists={spotifyPlaylists} />
-          <div>
-            <h1>Spotify Featured Playlists</h1>
-            {featuredPlaylists ? (
-              <ul>
-                {featuredPlaylists.playlists.items.map((playlist) => (
-                  <li key={playlist.id}>{playlist.name}</li>
-                ))}
-              </ul>
+  try {
+    return (
+      <div className="app">
+        {!token ? (
+          <a href={AUTH_URL} className="primary-button">
+            Login with Spotify
+          </a>
+        ) : (
+          <>
+            <MoodSelector onMoodSelect={handleMoodSelect} />
+            <GenreSelector onGenreSelect={handleGenreSelect} />
+            <button onClick={handleGeneratePlaylist} disabled={isLoading}>
+              {isLoading
+                ? "Afspeellijst genereren..."
+                : "Genereer Afspeellijst"}
+            </button>
+            {playlist ? (
+              <div className="playlist">
+                <h2>Gegenereerde Afspeellijst</h2>
+                <ul>
+                  {playlist.tracks && playlist.tracks.length > 0 ? (
+                    playlist.tracks.map((track) => (
+                      <li key={track.id}>
+                        {track.name} - {track.artist} ({track.genre})
+                      </li>
+                    ))
+                  ) : (
+                    <li>Geen nummers gevonden in de afspeellijst.</li>
+                  )}
+                </ul>
+                <button onClick={handleSavePlaylist} disabled={isLoading}>
+                  {isLoading ? "Opslaan..." : "Afspeellijst Opslaan"}
+                </button>
+              </div>
             ) : (
-              <p>Loading...</p>
+              <p>Geen afspeellijst gegenereerd.</p>
             )}
-          </div>
-        </>
-      )}
-      {console.log("Playlists data:", spotifyPlaylists)}
-    </div>
-  );
+            <SpotifyIntegration playlists={spotifyPlaylists} />
+            <div>
+              <h1>Spotify Featured Playlists</h1>
+              {featuredPlaylists ? (
+                <ul>
+                  {featuredPlaylists.playlists.items.map((playlist) => (
+                    <li key={playlist.id}>{playlist.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>Loading...</p>
+              )}
+            </div>
+          </>
+        )}
+        {console.log("Playlists data:", spotifyPlaylists)}
+      </div>
+    );
+  } catch (error) {
+    console.error("Error rendering the app:", error);
+    return (
+      <div>
+        <h1>Er is een fout opgetreden bij het laden van de applicatie.</h1>
+        <p>{error.message}</p>
+      </div>
+    );
+  }
 }
 
 export default App;
