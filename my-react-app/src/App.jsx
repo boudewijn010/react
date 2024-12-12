@@ -97,6 +97,7 @@ function App() {
     } catch (error) {
       console.error("Error generating playlist:", error);
       alert("Er is iets misgegaan bij het genereren van de afspeellijst.");
+      setPlaylist(null); // Ensure playlist is set to null on error
     } finally {
       setIsLoading(false);
     }
