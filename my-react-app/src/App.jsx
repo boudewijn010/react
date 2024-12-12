@@ -109,13 +109,32 @@ function App() {
       alert("Genereer eerst een afspeellijst!");
       return;
     }
+    if (!token) {
+      alert("Token is missing. Please login again.");
+      return;
+    }
     setIsLoading(true);
-    const result = await savePlaylist(playlist);
-    setIsLoading(false);
-    if (result.success) {
-      alert("Afspeellijst opgeslagen!");
-    } else {
-      alert("Er is iets misgegaan bij het opslaan van de afspeellijst.");
+    try {
+      console.log("Saving playlist:", playlist);
+      const result = await savePlaylist(playlist);
+      if (result.success) {
+        alert("Afspeellijst opgeslagen!");
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error("Error saving playlist:", error);
+      if (error.status === 401) {
+        alert("Token is expired or invalid. Please login again.");
+        window.localStorage.removeItem("token");
+        setToken(null);
+      } else if (error.status === 403) {
+        alert("You do not have permission to perform this action.");
+      } else {
+        alert("Er is iets misgegaan bij het opslaan van de afspeellijst.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -137,7 +156,7 @@ function App() {
             </button>
             {playlist ? (
               <div className="playlist">
-                <h2>Gegenereerde Afspeellijst</h2>
+                <h2>{playlist.title}</h2> {/* Display playlist title */}
                 <ul>
                   {playlist.tracks && playlist.tracks.length > 0 ? (
                     playlist.tracks.map((track) => (

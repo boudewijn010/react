@@ -38,6 +38,7 @@ const MoodSelector = ({ onMoodSelect }) => {
     </div>
   );
 };
+
 MoodSelector.propTypes = {
   onMoodSelect: PropTypes.func.isRequired,
 };

@@ -24,6 +24,7 @@ const SpotifyIntegration = ({ playlists }) => {
     </div>
   );
 };
+
 SpotifyIntegration.propTypes = {
   playlists: PropTypes.arrayOf(
     PropTypes.shape({
