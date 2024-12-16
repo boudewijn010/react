@@ -19,7 +19,7 @@ export const generatePlaylist = async (mood, genres) => {
   for (const genre of recommendedGenres) {
     try {
       const response = await spotifyApi.searchTracks(`genre:${genre}`, {
-        limit: 5,
+        limit: 50, // Increase the limit to get more tracks
       });
       if (response.tracks && response.tracks.items) {
         tracks.push(...response.tracks.items);
@@ -31,7 +31,10 @@ export const generatePlaylist = async (mood, genres) => {
     }
   }
 
-  const selectedTracks = tracks.slice(0, 10).map((track) => ({
+  // Shuffle the tracks array to get a random selection
+  const shuffledTracks = tracks.sort(() => 0.5 - Math.random());
+
+  const selectedTracks = shuffledTracks.map((track) => ({
     id: track.id,
     name: track.name,
     artist: track.artists[0].name,
@@ -40,9 +43,11 @@ export const generatePlaylist = async (mood, genres) => {
     albumCover: track.album.images[0]?.url || "",
   }));
 
+  const playlistTitle = `Mood Mix: ${mood} ${genres.join(", ")}`;
+
   const playlist = {
     id: "1",
-    title: "Mood Mix",
+    title: playlistTitle,
     tracks: selectedTracks,
   };
 

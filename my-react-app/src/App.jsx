@@ -94,7 +94,10 @@ function App() {
     try {
       const generatedPlaylist = await generatePlaylist(mood, genres);
       console.log("Generated playlist:", generatedPlaylist); // Add logging
-      setPlaylist(generatedPlaylist);
+      setPlaylist({
+        ...generatedPlaylist,
+        title: `${mood} - ${genres.join(", ")}`,
+      });
     } catch (error) {
       console.error("Error generating playlist:", error);
       alert("Er is iets misgegaan bij het genereren van de afspeellijst.");
@@ -143,76 +146,63 @@ function App() {
     }
   };
 
-  try {
-    return (
-      <div className="app">
-        {!token ? (
-          <a href={AUTH_URL} className="primary-button">
-            Login with Spotify
-          </a>
-        ) : (
-          <>
-            <MoodSelector onMoodSelect={handleMoodSelect} />
-            <GenreSelector onGenreSelect={handleGenreSelect} />
-            <button onClick={handleGeneratePlaylist} disabled={isLoading}>
-              {isLoading
-                ? "Afspeellijst genereren..."
-                : "Genereer Afspeellijst"}
-            </button>
-            {playlist ? (
-              <div className="playlist">
-                <h2>{playlist.title}</h2> {/* Display playlist title */}
-                <ul>
-                  {playlist.tracks && playlist.tracks.length > 0 ? (
-                    playlist.tracks.map((track) => (
-                      <li key={track.id}>
-                        <img
-                          src={track.albumCover}
-                          alt={track.name}
-                          className="track-album-cover"
-                          style={{ width: "100px", height: "100px" }}
-                        />
-                        {track.name} - {track.artist} ({track.genre})
-                      </li>
-                    ))
-                  ) : (
-                    <li>Geen nummers gevonden in de afspeellijst.</li>
-                  )}
-                </ul>
-                <button onClick={handleSavePlaylist} disabled={isLoading}>
-                  {isLoading ? "Opslaan..." : "Afspeellijst Opslaan"}
-                </button>
-              </div>
-            ) : (
-              <p>Geen afspeellijst gegenereerd.</p>
-            )}
-            <SpotifyIntegration playlists={spotifyPlaylists} />
-            <div>
-              <h1>Spotify Featured Playlists</h1>
-              {featuredPlaylists ? (
-                <ul>
-                  {featuredPlaylists.playlists.items.map((playlist) => (
-                    <li key={playlist.id}>{playlist.name}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>Loading...</p>
-              )}
+  return (
+    <div className="app">
+      {!token ? (
+        <a href={AUTH_URL} className="primary-button">
+          Login with Spotify
+        </a>
+      ) : (
+        <>
+          <MoodSelector onMoodSelect={handleMoodSelect} />
+          <GenreSelector onGenreSelect={handleGenreSelect} />
+          <button onClick={handleGeneratePlaylist} disabled={isLoading}>
+            {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
+          </button>
+          {playlist ? (
+            <div className="playlist">
+              <h2>{playlist.title}</h2> {/* Display playlist title */}
+              <ul>
+                {playlist.tracks && playlist.tracks.length > 0 ? (
+                  playlist.tracks.map((track) => (
+                    <li key={track.id}>
+                      <img
+                        src={track.albumCover}
+                        alt={track.name}
+                        className="track-album-cover"
+                        style={{ width: "100px", height: "100px" }}
+                      />
+                      {track.name} - {track.artist} ({track.genre})
+                    </li>
+                  ))
+                ) : (
+                  <li>Geen nummers gevonden in de afspeellijst.</li>
+                )}
+              </ul>
+              <button onClick={handleSavePlaylist} disabled={isLoading}>
+                {isLoading ? "Opslaan..." : "Afspeellijst Opslaan"}
+              </button>
             </div>
-          </>
-        )}
-        {console.log("Playlists data:", spotifyPlaylists)}
-      </div>
-    );
-  } catch (error) {
-    console.error("Error rendering the app:", error);
-    return (
-      <div>
-        <h1>Er is een fout opgetreden bij het laden van de applicatie.</h1>
-        <p>{error.message}</p>
-      </div>
-    );
-  }
+          ) : (
+            <p>Geen afspeellijst gegenereerd.</p>
+          )}
+          <SpotifyIntegration playlists={spotifyPlaylists} />
+          <div>
+            <h1>Spotify Featured Playlists</h1>
+            {featuredPlaylists ? (
+              <ul>
+                {featuredPlaylists.playlists.items.map((playlist) => (
+                  <li key={playlist.id}>{playlist.name}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>Loading...</p>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default App;
