@@ -5,6 +5,11 @@ export async function getSpotifyToken() {
   const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
   const clientSecret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET;
 
+  if (!clientId || !clientSecret) {
+    console.error("Spotify client ID or secret is missing");
+    throw new Error("Spotify client ID or secret is missing");
+  }
+
   const response = await fetch(SPOTIFY_TOKEN_URL, {
     method: "POST",
     headers: {
@@ -28,7 +33,7 @@ export async function getSpotifyToken() {
 
 export async function fetchSpotifyData(endpoint) {
   const token = await getSpotifyToken();
-  const response = await fetch(`${SPOTIFY_API_URL}/${endpoint}`, {
+  const response = await fetch(`${SPOTIFY_API_URL}${endpoint}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

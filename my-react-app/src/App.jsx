@@ -124,6 +124,10 @@ function App() {
       }
     } catch (error) {
       console.error("Error saving playlist:", error);
+      console.error(
+        "Error details:",
+        error.response ? error.response.data : error.message
+      );
       if (error.status === 401) {
         alert("Token is expired or invalid. Please login again.");
         window.localStorage.removeItem("token");

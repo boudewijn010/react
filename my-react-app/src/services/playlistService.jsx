@@ -23,7 +23,11 @@ export const generatePlaylist = async (mood, genres) => {
       const response = await spotifyApi.searchTracks(`genre:${genre}`, {
         limit: 5,
       });
-      tracks.push(...response.tracks.items);
+      if (response.tracks && response.tracks.items) {
+        tracks.push(...response.tracks.items);
+      } else {
+        console.error(`No tracks found for genre ${genre}`);
+      }
     } catch (error) {
       console.error(`Error fetching tracks for genre ${genre}:`, error);
     }
