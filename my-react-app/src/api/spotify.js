@@ -40,8 +40,16 @@ export async function fetchSpotifyData(endpoint) {
   });
 
   if (!response.ok) {
-    console.error(`Spotify API Error: ${response.status}`);
-    throw new Error(`Spotify API Error: ${response.status}`);
+    console.error(
+      `Spotify API Error: ${response.status} - ${response.statusText}`
+    ); // Include statusText for more detail
+    const errorData = await response.json().catch(() => null); // Try to parse error response
+    console.error("Error data:", errorData);
+    throw new Error(
+      `Spotify API Error: ${response.status} - ${response.statusText} ${
+        errorData ? JSON.stringify(errorData) : ""
+      }`
+    );
   }
 
   return response.json();

@@ -19,7 +19,7 @@ function App() {
 
   const CLIENT_ID = "ef913ac181c545858684acbc79de38f2";
   const REDIRECT_URI = "http://localhost:5173/";
-  const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-read-private`;
+  const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-read-private%20playlist-modify-private%20playlist-modify-public`;
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -64,7 +64,7 @@ function App() {
 
   const fetchFeaturedPlaylists = async () => {
     try {
-      const playlists = await fetchSpotifyData("browse/featured-playlists");
+      const playlists = await fetchSpotifyData("/browse/featured-playlists");
       setFeaturedPlaylists(playlists);
     } catch (error) {
       if (error.status === 401) {
