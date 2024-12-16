@@ -11,10 +11,14 @@ export async function getSpotifyToken() {
       "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
     },
-    body: "grant_type=client_credentials",
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+    }),
   });
 
   if (!response.ok) {
+    const errorData = await response.json();
+    console.error("Failed to fetch Spotify token:", errorData);
     throw new Error("Failed to fetch Spotify token");
   }
 
@@ -31,6 +35,7 @@ export async function fetchSpotifyData(endpoint) {
   });
 
   if (!response.ok) {
+    console.error(`Spotify API Error: ${response.status}`);
     throw new Error(`Spotify API Error: ${response.status}`);
   }
 
