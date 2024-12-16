@@ -12,11 +12,9 @@ const moodGenreMapping = {
 };
 
 export const generatePlaylist = async (mood, genres) => {
-  // Filter genres based on mood
   const recommendedGenres =
     genres.length > 0 ? genres : moodGenreMapping[mood] || [];
 
-  // Fetch real tracks from Spotify API
   const tracks = [];
   for (const genre of recommendedGenres) {
     try {
@@ -33,16 +31,15 @@ export const generatePlaylist = async (mood, genres) => {
     }
   }
 
-  // Ensure we have 10 tracks
   const selectedTracks = tracks.slice(0, 10).map((track) => ({
     id: track.id,
     name: track.name,
     artist: track.artists[0].name,
     genre:
       track.genres && track.genres.length > 0 ? track.genres[0] : "unknown",
+    albumCover: track.album.images[0]?.url || "",
   }));
 
-  // Dummy playlist generation
   const playlist = {
     id: "1",
     title: "Mood Mix",
@@ -54,7 +51,6 @@ export const generatePlaylist = async (mood, genres) => {
 
 export const savePlaylist = async (playlist) => {
   try {
-    // Create a new playlist
     const user = await spotifyApi.getMe();
     const newPlaylist = await spotifyApi.createPlaylist(user.id, {
       name: playlist.title,
@@ -62,23 +58,14 @@ export const savePlaylist = async (playlist) => {
       public: false,
     });
 
-    // Add tracks to the new playlist
     const trackUris = playlist.tracks.map(
       (track) => `spotify:track:${track.id}`
     );
     await spotifyApi.addTracksToPlaylist(newPlaylist.id, trackUris);
 
-    console.log("Playlist saved:", newPlaylist);
     return { success: true, playlistId: newPlaylist.id };
   } catch (error) {
     console.error("Error saving playlist:", error);
-    if (error.response) {
-      console.error("Response data:", error.response.data);
-      console.error("Response status:", error.response.status);
-      console.error("Response headers:", error.response.headers);
-    } else {
-      console.error("Error message:", error.message);
-    }
     return { success: false, error: error.message };
   }
 };

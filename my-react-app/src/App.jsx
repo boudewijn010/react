@@ -37,16 +37,14 @@ function App() {
       fetchPlaylists();
       fetchFeaturedPlaylists();
     } else {
-      console.log("No token found, redirecting to login.");
+      window.location.href = AUTH_URL; // Redirect to Spotify login
     }
   }, []);
 
   const fetchPlaylists = async () => {
     try {
-      console.log("Fetching Spotify playlists...");
       const response = await spotifyApi.getUserPlaylists();
       if (response.items) {
-        console.log("Fetched playlists:", response.items);
         setSpotifyPlaylists(response.items);
       } else {
         console.error("No playlists found in API response.");
@@ -56,6 +54,7 @@ function App() {
         alert("Token is expired or invalid. Please login again.");
         window.localStorage.removeItem("token");
         setToken(null);
+        window.location.href = AUTH_URL; // Redirect to Spotify login
       } else {
         console.error("Error fetching playlists:", error);
       }
@@ -71,6 +70,7 @@ function App() {
         alert("Token is expired or invalid. Please login again.");
         window.localStorage.removeItem("token");
         setToken(null);
+        window.location.href = AUTH_URL; // Redirect to Spotify login
       } else {
         console.error("Error fetching Spotify data:", error);
       }
@@ -132,6 +132,7 @@ function App() {
         alert("Token is expired or invalid. Please login again.");
         window.localStorage.removeItem("token");
         setToken(null);
+        window.location.href = AUTH_URL; // Redirect to Spotify login
       } else if (error.status === 403) {
         alert("You do not have permission to perform this action.");
       } else {
@@ -165,6 +166,12 @@ function App() {
                   {playlist.tracks && playlist.tracks.length > 0 ? (
                     playlist.tracks.map((track) => (
                       <li key={track.id}>
+                        <img
+                          src={track.albumCover}
+                          alt={track.name}
+                          className="track-album-cover"
+                          style={{ width: "100px", height: "100px" }}
+                        />
                         {track.name} - {track.artist} ({track.genre})
                       </li>
                     ))
