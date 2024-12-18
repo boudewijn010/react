@@ -39,7 +39,7 @@ function App() {
     } else {
       window.location.href = AUTH_URL; // Redirect to Spotify login
     }
-  });
+  }, []);
 
   const fetchPlaylists = async () => {
     try {

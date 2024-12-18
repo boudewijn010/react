@@ -31,10 +31,16 @@ export const generatePlaylist = async (mood, genres) => {
     }
   }
 
-  // Shuffle the tracks array to get a random selection
-  const shuffledTracks = tracks.sort(() => 0.5 - Math.random());
+  if (tracks.length === 0) {
+    console.error("No tracks found for the selected mood and genres.");
+    return {
+      id: "1",
+      title: "Mood Mix",
+      tracks: [],
+    };
+  }
 
-  const selectedTracks = shuffledTracks.map((track) => ({
+  const selectedTracks = tracks.slice(0, 30).map((track) => ({
     id: track.id,
     name: track.name,
     artist: track.artists[0].name,
