@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 
 const genres = [
@@ -10,7 +10,7 @@ const genres = [
   { id: "electronic", label: "Electronic", icon: "🎹" },
 ];
 
-const GenreSelector = ({ onGenreSelect }) => {
+const GenreSelector = ({ onGenreSelect, onGenerate }) => {
   const [selectedGenre, setSelectedGenre] = useState(null);
 
   const handleGenreClick = (genre) => {
@@ -35,12 +35,16 @@ const GenreSelector = ({ onGenreSelect }) => {
           </button>
         ))}
       </div>
+      <button className="generate-button" onClick={onGenerate}>
+        Genereer Playlist
+      </button>
     </div>
   );
 };
 
 GenreSelector.propTypes = {
   onGenreSelect: PropTypes.func.isRequired,
+  onGenerate: PropTypes.func.isRequired,
 };
 
 export default GenreSelector;
