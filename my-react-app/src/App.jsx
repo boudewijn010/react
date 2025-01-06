@@ -156,7 +156,11 @@ function App() {
         <>
           <MoodSelector onMoodSelect={handleMoodSelect} />
           <GenreSelector onGenreSelect={handleGenreSelect} />
-          <button onClick={handleGeneratePlaylist} disabled={isLoading}>
+          <button
+            onClick={handleGeneratePlaylist}
+            disabled={isLoading}
+            className="generate-button"
+          >
             {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
           </button>
           {playlist ? (
@@ -165,14 +169,16 @@ function App() {
               <ul>
                 {playlist.tracks && playlist.tracks.length > 0 ? (
                   playlist.tracks.map((track) => (
-                    <li key={track.id}>
+                    <li key={track.id} className="track-item">
                       <img
                         src={track.albumCover}
                         alt={track.name}
                         className="track-album-cover"
                         style={{ width: "100px", height: "100px" }}
                       />
-                      {track.name} - {track.artist} ({track.genre})
+                      <div className="track-info">
+                        {track.name} - {track.artist} ({track.genre})
+                      </div>
                     </li>
                   ))
                 ) : (

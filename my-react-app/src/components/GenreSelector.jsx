@@ -1,42 +1,37 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 
 const genres = [
-  { id: "pop", label: "Pop" },
-  { id: "rock", label: "Rock" },
-  { id: "hip-hop", label: "Hip Hop" },
-  { id: "electronic", label: "Electronic" },
-  { id: "classical", label: "Klassiek" },
-  { id: "jazz", label: "Jazz" },
-  { id: "indie", label: "Indie" },
-  { id: "latin", label: "Latin" },
+  { id: "pop", label: "Pop", icon: "🎤" },
+  { id: "rock", label: "Rock", icon: "🎸" },
+  { id: "jazz", label: "Jazz", icon: "🎷" },
+  { id: "classical", label: "Classical", icon: "🎻" },
+  { id: "hiphop", label: "Hip-Hop", icon: "🎧" },
+  { id: "electronic", label: "Electronic", icon: "🎹" },
 ];
 
 const GenreSelector = ({ onGenreSelect }) => {
-  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [selectedGenre, setSelectedGenre] = useState(null);
 
-  const handleGenreToggle = (genreId) => {
-    const newSelectedGenres = selectedGenres.includes(genreId)
-      ? selectedGenres.filter((genre) => genre !== genreId)
-      : [...selectedGenres, genreId];
-
-    setSelectedGenres(newSelectedGenres);
-    onGenreSelect(newSelectedGenres);
+  const handleGenreClick = (genre) => {
+    setSelectedGenre(genre);
+    onGenreSelect(genre);
   };
 
   return (
     <div className="genre-selector">
-      <h2>Selecteer Genres</h2>
+      <h2>Welk genre wil je luisteren?</h2>
       <div className="genre-grid">
         {genres.map((genre) => (
           <button
             key={genre.id}
             className={`genre-button ${
-              selectedGenres.includes(genre.id) ? "selected" : ""
+              selectedGenre === genre.id ? "selected" : ""
             }`}
-            onClick={() => handleGenreToggle(genre.id)}
+            onClick={() => handleGenreClick(genre.id)}
           >
-            {genre.label}
+            <span className="genre-icon">{genre.icon}</span>
+            <span className="genre-label">{genre.label}</span>
           </button>
         ))}
       </div>
