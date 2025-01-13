@@ -14,6 +14,7 @@ function App() {
   const [playlist, setPlaylist] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
+  const [previousPlaylists, setPreviousPlaylists] = useState([]);
   const [token, setToken] = useState(null);
   const [featuredPlaylists, setFeaturedPlaylists] = useState(null);
 
@@ -36,6 +37,7 @@ function App() {
       spotifyApi.setAccessToken(_token);
       fetchPlaylists();
       fetchFeaturedPlaylists();
+      fetchPreviousPlaylists();
     } else {
       window.location.href = AUTH_URL; // Redirect to Spotify login
     }
@@ -74,6 +76,19 @@ function App() {
       } else {
         console.error("Error fetching Spotify data:", error);
       }
+    }
+  };
+
+  const fetchPreviousPlaylists = async () => {
+    try {
+      const response = await fetch("/api/playlists");
+      if (!response.ok) {
+        throw new Error("Failed to fetch previous playlists");
+      }
+      const data = await response.json();
+      setPreviousPlaylists(data);
+    } catch (error) {
+      console.error("Error fetching previous playlists:", error);
     }
   };
 
@@ -124,6 +139,7 @@ function App() {
       const result = await savePlaylist(playlist);
       if (result.success) {
         alert("Afspeellijst opgeslagen!");
+        fetchPreviousPlaylists(); // Refresh previous playlists
       } else {
         throw new Error(result.error);
       }
@@ -209,6 +225,18 @@ function App() {
               </ul>
             ) : (
               <p>Loading...</p>
+            )}
+          </div>
+          <div>
+            <h1>Previous Playlists</h1>
+            {previousPlaylists.length > 0 ? (
+              <ul>
+                {previousPlaylists.map((playlist) => (
+                  <li key={playlist.playlistId}>{playlist.title}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No previous playlists found.</p>
             )}
           </div>
         </>
