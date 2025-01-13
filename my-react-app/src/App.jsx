@@ -17,7 +17,7 @@ function App() {
   const [token, setToken] = useState(null);
   const [featuredPlaylists, setFeaturedPlaylists] = useState(null);
 
-  const CLIENT_ID = "ef913ac181c545858684acbc79de38f2";
+  const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
   const REDIRECT_URI = "http://localhost:5173/";
   const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-read-private%20playlist-modify-private%20playlist-modify-public`;
 
@@ -82,7 +82,9 @@ function App() {
   };
 
   const handleGenreSelect = (selectedGenres) => {
-    setGenres(selectedGenres);
+    setGenres(
+      Array.isArray(selectedGenres) ? selectedGenres : [selectedGenres]
+    );
   };
 
   const handleGeneratePlaylist = async () => {
@@ -159,7 +161,7 @@ function App() {
           <button
             onClick={handleGeneratePlaylist}
             disabled={isLoading}
-            className="generate-button"
+            className="primary-button"
           >
             {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
           </button>
@@ -185,7 +187,11 @@ function App() {
                   <li>Geen nummers gevonden in de afspeellijst.</li>
                 )}
               </ul>
-              <button onClick={handleSavePlaylist} disabled={isLoading}>
+              <button
+                onClick={handleSavePlaylist}
+                disabled={isLoading}
+                className="primary-button"
+              >
                 {isLoading ? "Opslaan..." : "Afspeellijst Opslaan"}
               </button>
             </div>
