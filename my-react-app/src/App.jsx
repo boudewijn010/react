@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import MoodSelector from "./components/MoodSelector";
 import GenreSelector from "./components/GenreSelector";
+import RecommendedTracks from "./components/RecommendedTracks";
 import {
   generatePlaylist,
   savePlaylist,
@@ -19,7 +20,6 @@ function App() {
   const [recommendedTracks, setRecommendedTracks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
-  const [previousPlaylists, setPreviousPlaylists] = useState([]);
   const [token, setToken] = useState(null);
   const [featuredPlaylists, setFeaturedPlaylists] = useState(null);
 
@@ -28,26 +28,33 @@ function App() {
   const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-read-private%20playlist-modify-private%20playlist-modify-public`;
 
   useEffect(() => {
-    const hash = window.location.hash;
-    let _token = window.localStorage.getItem("token");
+    if (!token) {
+      const hash = window.location.hash;
+      let token = window.localStorage.getItem("token");
 
-    if (!_token && hash) {
-      _token = hash.split("&")[0].split("=")[1];
-      window.localStorage.setItem("token", _token);
-      window.location.hash = ""; // Clear hash
+      if (!token && hash) {
+        token = hash
+          .substring(1)
+          .split("&")
+          .find((elem) => elem.startsWith("access_token"))
+          .split("=")[1];
+
+        window.location.hash = "";
+        window.localStorage.setItem("token", token);
+      }
+
+      setToken(token);
+      spotifyApi.setAccessToken(token);
     }
+  }, [token]);
 
-    if (_token) {
-      setToken(_token);
-      spotifyApi.setAccessToken(_token);
+  useEffect(() => {
+    if (token) {
       fetchPlaylists();
       fetchFeaturedPlaylists();
-      fetchPreviousPlaylists();
       fetchRecommendedTracks();
-    } else {
-      window.location.href = AUTH_URL; // Redirect to Spotify login
     }
-  }, []);
+  }, [token]);
 
   const fetchPlaylists = async () => {
     try {
@@ -82,19 +89,6 @@ function App() {
       } else {
         console.error("Error fetching Spotify data:", error);
       }
-    }
-  };
-
-  const fetchPreviousPlaylists = async () => {
-    try {
-      const response = await fetch("/api/playlists");
-      if (!response.ok) {
-        throw new Error("Failed to fetch previous playlists");
-      }
-      const data = await response.json();
-      setPreviousPlaylists(data);
-    } catch (error) {
-      console.error("Error fetching previous playlists:", error);
     }
   };
 
@@ -141,18 +135,43 @@ function App() {
     }
   };
 
-  const handleSavePlaylist = () => {
+  const handleSavePlaylist = async () => {
+    if (!playlist) {
+      alert("Genereer eerst een afspeellijst!");
+      return;
+    }
+    if (!token) {
+      alert("Token is missing. Please login again.");
+      return;
+    }
     setIsLoading(true);
-    // Voeg hier je logica toe om de afspeellijst op te slaan
-    savePlaylist(playlist)
-      .then(() => {
-        setIsLoading(false);
+    try {
+      console.log("Saving playlist:", playlist);
+      const result = await savePlaylist(playlist);
+      if (result.success) {
         alert("Afspeellijst opgeslagen!");
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        console.error("Error saving playlist:", error);
-      });
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error("Error saving playlist:", error);
+      console.error(
+        "Error details:",
+        error.response ? error.response.data : error.message
+      );
+      if (error.status === 401) {
+        alert("Token is expired or invalid. Please login again.");
+        window.localStorage.removeItem("token");
+        setToken(null);
+        window.location.href = AUTH_URL; // Redirect to Spotify login
+      } else if (error.status === 403) {
+        alert("You do not have permission to perform this action.");
+      } else {
+        alert("Er is iets misgegaan bij het opslaan van de afspeellijst.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -172,7 +191,6 @@ function App() {
             onClick={handleGeneratePlaylist}
             disabled={isLoading}
             className="primary-button"
-            id="knop"
           >
             {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
           </button>
@@ -222,40 +240,7 @@ function App() {
               <p>Loading...</p>
             )}
           </div>
-          <div>
-            <h1>Recommended Tracks</h1>
-            {recommendedTracks.length > 0 ? (
-              <ul>
-                {recommendedTracks.map((track) => (
-                  <li key={track.id} className="track-item">
-                    <img
-                      src={track.albumCover}
-                      alt={track.name}
-                      className="track-album-cover"
-                      style={{ width: "100px", height: "100px" }}
-                    />
-                    <div className="track-info">
-                      {track.name} - {track.artist}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No recommended tracks found.</p>
-            )}
-          </div>
-          <div>
-            <h1>Previous Playlists</h1>
-            {previousPlaylists.length > 0 ? (
-              <ul>
-                {previousPlaylists.map((playlist) => (
-                  <li key={playlist.playlistId}>{playlist.title}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>No previous playlists found.</p>
-            )}
-          </div>
+          <RecommendedTracks recommendedTracks={recommendedTracks} />
         </>
       )}
     </div>

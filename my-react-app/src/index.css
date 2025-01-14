@@ -385,7 +385,7 @@ footer {
 }
 
 .generate-button {
-  display: none;
+  /* display: none; */
 }
 
 /* .button.mood-button.selected {
@@ -395,4 +395,5 @@ footer {
 } */
 
 #knop {
+  display: none;
 }

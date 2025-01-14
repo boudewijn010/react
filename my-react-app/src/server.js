@@ -1,5 +1,4 @@
 import express from "express";
-import playlistRouter from "./api/playlist.js";
 import dotenv from "dotenv";
 import process from "process";
 
@@ -10,7 +9,6 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use("/api", playlistRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

@@ -85,42 +85,10 @@ export const savePlaylist = async (playlist) => {
     );
     await spotifyApi.addTracksToPlaylist(newPlaylist.id, trackUris);
 
-    // Save playlist to database
-    await savePlaylistToDatabase({
-      userId: user.id,
-      playlistId: newPlaylist.id,
-      title: playlist.title,
-      tracks: playlist.tracks,
-    });
-
     return { success: true, playlistId: newPlaylist.id };
   } catch (error) {
     console.error("Error saving playlist:", error);
     return { success: false, error: error.message };
-  }
-};
-
-const savePlaylistToDatabase = async (playlist) => {
-  try {
-    console.log(
-      "Saving playlist to database with URL: http://localhost:3000/api/playlists"
-    );
-    const response = await fetch("http://localhost:3000/api/playlists", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(playlist),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to save playlist to database");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error saving playlist to database:", error);
-    throw error;
   }
 };
 
@@ -143,11 +111,6 @@ export const getRecommendedTracks = async () => {
       console.error("No seed tracks available for recommendations.");
       return [];
     }
-
-    const recommendationsUrl = `https://api.spotify.com/v1/recommendations?seed_tracks=${seedTracks.join(
-      ","
-    )}&limit=20`;
-    console.log("Recommendations URL:", recommendationsUrl);
 
     const recommendations = await spotifyApi.getRecommendations({
       seed_tracks: seedTracks,
