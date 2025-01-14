@@ -33,7 +33,9 @@ export async function getSpotifyToken() {
 
 export async function fetchSpotifyData(endpoint) {
   const token = await getSpotifyToken();
-  const response = await fetch(`${SPOTIFY_API_URL}${endpoint}`, {
+  const url = `${SPOTIFY_API_URL}${endpoint}`;
+  console.log("Fetching Spotify data from URL:", url);
+  const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

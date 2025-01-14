@@ -11,6 +11,14 @@ const moodGenreMapping = {
   workout: ["electronic", "hip-hop"],
 };
 
+const shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
 export const generatePlaylist = async (mood, genres) => {
   const recommendedGenres =
     genres.length > 0 ? genres : moodGenreMapping[mood] || [];
@@ -40,7 +48,10 @@ export const generatePlaylist = async (mood, genres) => {
     };
   }
 
-  const selectedTracks = tracks.slice(0, 30).map((track) => ({
+  // Shuffle the tracks to ensure randomness
+  const shuffledTracks = shuffleArray(tracks);
+
+  const selectedTracks = shuffledTracks.slice(0, 30).map((track) => ({
     id: track.id,
     name: track.name,
     artist: track.artists[0].name,
@@ -91,6 +102,9 @@ export const savePlaylist = async (playlist) => {
 
 const savePlaylistToDatabase = async (playlist) => {
   try {
+    console.log(
+      "Saving playlist to database with URL: http://localhost:3000/api/playlists"
+    );
     const response = await fetch("http://localhost:3000/api/playlists", {
       method: "POST",
       headers: {
@@ -106,6 +120,55 @@ const savePlaylistToDatabase = async (playlist) => {
     return await response.json();
   } catch (error) {
     console.error("Error saving playlist to database:", error);
+    throw error;
+  }
+};
+
+export const getRecommendedTracks = async () => {
+  try {
+    const userPlaylists = await spotifyApi.getUserPlaylists();
+    const trackIds = [];
+
+    for (const playlist of userPlaylists.items) {
+      const tracks = await spotifyApi.getPlaylistTracks(playlist.id);
+      tracks.items.forEach((item) => {
+        trackIds.push(item.track.id);
+      });
+    }
+
+    console.log("Track IDs for recommendations:", trackIds);
+
+    const seedTracks = trackIds.slice(0, 5); // Use up to 5 seed tracks
+    if (seedTracks.length === 0) {
+      console.error("No seed tracks available for recommendations.");
+      return [];
+    }
+
+    const recommendationsUrl = `https://api.spotify.com/v1/recommendations?seed_tracks=${seedTracks.join(
+      ","
+    )}&limit=20`;
+    console.log("Recommendations URL:", recommendationsUrl);
+
+    const recommendations = await spotifyApi.getRecommendations({
+      seed_tracks: seedTracks,
+      limit: 20, // Number of recommended tracks
+    });
+
+    console.log("Recommendations:", recommendations);
+
+    if (!recommendations.tracks || recommendations.tracks.length === 0) {
+      console.error("No recommendations found.");
+      return [];
+    }
+
+    return recommendations.tracks.map((track) => ({
+      id: track.id,
+      name: track.name,
+      artist: track.artists[0].name,
+      albumCover: track.album.images[0]?.url || "",
+    }));
+  } catch (error) {
+    console.error("Error getting recommended tracks:", error);
     throw error;
   }
 };

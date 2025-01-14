@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import MoodSelector from "./components/MoodSelector";
 import GenreSelector from "./components/GenreSelector";
-import { generatePlaylist, savePlaylist } from "./services/playlistService";
+import {
+  generatePlaylist,
+  savePlaylist,
+  getRecommendedTracks,
+} from "./services/playlistService";
 import SpotifyIntegration from "./spotify-api";
 import SpotifyWebApi from "spotify-web-api-js";
 import { fetchSpotifyData } from "./api/spotify";
@@ -12,6 +16,7 @@ function App() {
   const [mood, setMood] = useState(null);
   const [genres, setGenres] = useState([]);
   const [playlist, setPlaylist] = useState(null);
+  const [recommendedTracks, setRecommendedTracks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
   const [previousPlaylists, setPreviousPlaylists] = useState([]);
@@ -38,6 +43,7 @@ function App() {
       fetchPlaylists();
       fetchFeaturedPlaylists();
       fetchPreviousPlaylists();
+      fetchRecommendedTracks();
     } else {
       window.location.href = AUTH_URL; // Redirect to Spotify login
     }
@@ -92,7 +98,18 @@ function App() {
     }
   };
 
+  const fetchRecommendedTracks = async () => {
+    try {
+      const tracks = await getRecommendedTracks();
+      console.log("Recommended tracks:", tracks);
+      setRecommendedTracks(tracks);
+    } catch (error) {
+      console.error("Error fetching recommended tracks:", error);
+    }
+  };
+
   const handleMoodSelect = (selectedMood) => {
+    console.log("Mood selected in App:", selectedMood); // Add logging
     setMood(selectedMood);
   };
 
@@ -124,44 +141,18 @@ function App() {
     }
   };
 
-  const handleSavePlaylist = async () => {
-    if (!playlist) {
-      alert("Genereer eerst een afspeellijst!");
-      return;
-    }
-    if (!token) {
-      alert("Token is missing. Please login again.");
-      return;
-    }
+  const handleSavePlaylist = () => {
     setIsLoading(true);
-    try {
-      console.log("Saving playlist:", playlist);
-      const result = await savePlaylist(playlist);
-      if (result.success) {
+    // Voeg hier je logica toe om de afspeellijst op te slaan
+    savePlaylist(playlist)
+      .then(() => {
+        setIsLoading(false);
         alert("Afspeellijst opgeslagen!");
-        fetchPreviousPlaylists(); // Refresh previous playlists
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error("Error saving playlist:", error);
-      console.error(
-        "Error details:",
-        error.response ? error.response.data : error.message
-      );
-      if (error.status === 401) {
-        alert("Token is expired or invalid. Please login again.");
-        window.localStorage.removeItem("token");
-        setToken(null);
-        window.location.href = AUTH_URL; // Redirect to Spotify login
-      } else if (error.status === 403) {
-        alert("You do not have permission to perform this action.");
-      } else {
-        alert("Er is iets misgegaan bij het opslaan van de afspeellijst.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        console.error("Error saving playlist:", error);
+      });
   };
 
   return (
@@ -173,11 +164,15 @@ function App() {
       ) : (
         <>
           <MoodSelector onMoodSelect={handleMoodSelect} />
-          <GenreSelector onGenreSelect={handleGenreSelect} />
+          <GenreSelector
+            onGenreSelect={handleGenreSelect}
+            onGenerate={handleGeneratePlaylist}
+          />
           <button
             onClick={handleGeneratePlaylist}
             disabled={isLoading}
             className="primary-button"
+            id="knop"
           >
             {isLoading ? "Afspeellijst genereren..." : "Genereer Afspeellijst"}
           </button>
@@ -225,6 +220,28 @@ function App() {
               </ul>
             ) : (
               <p>Loading...</p>
+            )}
+          </div>
+          <div>
+            <h1>Recommended Tracks</h1>
+            {recommendedTracks.length > 0 ? (
+              <ul>
+                {recommendedTracks.map((track) => (
+                  <li key={track.id} className="track-item">
+                    <img
+                      src={track.albumCover}
+                      alt={track.name}
+                      className="track-album-cover"
+                      style={{ width: "100px", height: "100px" }}
+                    />
+                    <div className="track-info">
+                      {track.name} - {track.artist}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No recommended tracks found.</p>
             )}
           </div>
           <div>

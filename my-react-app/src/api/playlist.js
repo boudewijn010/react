@@ -12,6 +12,15 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 });
 
+pool
+  .getConnection()
+  .then(() => {
+    console.log("Connected to the database");
+  })
+  .catch((error) => {
+    console.error("Error connecting to the database:", error);
+  });
+
 router.post("/playlists", async (req, res) => {
   const { userId, playlistId, title, tracks } = req.body;
 
