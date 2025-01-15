@@ -170,6 +170,7 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: center;
+  display: none;
 }
 
 .playlist-grid {
@@ -178,6 +179,7 @@ footer {
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
   justify-content: center;
+  display: none;
 }
 
 .playlist-card {

@@ -21,6 +21,7 @@ function App() {
   const [previousPlaylists, setPreviousPlaylists] = useState([]);
   const [token, setToken] = useState(null);
   const [featuredPlaylists, setFeaturedPlaylists] = useState(null);
+  const [recommendedTracks, setRecommendedTracks] = useState([]); // Add this line
 
   const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
   const REDIRECT_URI = "http://localhost:5173/";
@@ -257,6 +258,20 @@ function App() {
               </ul>
             ) : (
               <p>No previous playlists found.</p>
+            )}
+          </div>
+          <div>
+            <h1>Recommended Tracks</h1>
+            {recommendedTracks.length > 0 ? (
+              <ul>
+                {recommendedTracks.map((track) => (
+                  <li key={track.id}>
+                    {track.name} - {track.artist}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No recommended tracks found.</p>
             )}
           </div>
         </>

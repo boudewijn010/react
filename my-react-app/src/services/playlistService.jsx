@@ -75,14 +75,6 @@ export const savePlaylist = async (playlist) => {
     );
     await spotifyApi.addTracksToPlaylist(newPlaylist.id, trackUris);
 
-    // Save playlist to database
-    await savePlaylistToDatabase({
-      userId: user.id,
-      playlistId: newPlaylist.id,
-      title: playlist.title,
-      tracks: playlist.tracks,
-    });
-
     return { success: true, playlistId: newPlaylist.id };
   } catch (error) {
     console.error("Error saving playlist:", error);
@@ -90,26 +82,26 @@ export const savePlaylist = async (playlist) => {
   }
 };
 
-const savePlaylistToDatabase = async (playlist) => {
-  try {
-    const response = await fetch("http://localhost:3000/api/playlists", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(playlist),
-    });
+// const savePlaylistToDatabase = async (playlist) => {
+//   try {
+//     const response = await fetch("http://localhost:3000/api/playlists", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(playlist),
+//     });
 
-    if (!response.ok) {
-      throw new Error("Failed to save playlist to database");
-    }
+//     if (!response.ok) {
+//       throw new Error("Failed to save playlist to database");
+//     }
 
-    return await response.json();
-  } catch (error) {
-    console.error("Error saving playlist to database:", error);
-    throw error;
-  }
-};
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error saving playlist to database:", error);
+//     throw error;
+//   }
+// };
 
 export const getRecommendedTracks = async (token) => {
   try {
