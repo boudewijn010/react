@@ -1,4 +1,5 @@
 import SpotifyWebApi from "spotify-web-api-js";
+import { fetchRecommendedTracks } from "../components/spotifyservice";
 
 const spotifyApi = new SpotifyWebApi();
 
@@ -9,14 +10,6 @@ const moodGenreMapping = {
   romantic: ["pop", "indie"],
   melancholic: ["indie", "rock"],
   workout: ["electronic", "hip-hop"],
-};
-
-const shuffleArray = (array) => {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
 };
 
 export const generatePlaylist = async (mood, genres) => {
@@ -48,10 +41,7 @@ export const generatePlaylist = async (mood, genres) => {
     };
   }
 
-  // Shuffle the tracks to ensure randomness
-  const shuffledTracks = shuffleArray(tracks);
-
-  const selectedTracks = shuffledTracks.slice(0, 30).map((track) => ({
+  const selectedTracks = tracks.slice(0, 30).map((track) => ({
     id: track.id,
     name: track.name,
     artist: track.artists[0].name,
@@ -85,6 +75,14 @@ export const savePlaylist = async (playlist) => {
     );
     await spotifyApi.addTracksToPlaylist(newPlaylist.id, trackUris);
 
+    // Save playlist to database
+    await savePlaylistToDatabase({
+      userId: user.id,
+      playlistId: newPlaylist.id,
+      title: playlist.title,
+      tracks: playlist.tracks,
+    });
+
     return { success: true, playlistId: newPlaylist.id };
   } catch (error) {
     console.error("Error saving playlist:", error);
@@ -92,7 +90,28 @@ export const savePlaylist = async (playlist) => {
   }
 };
 
-export const getRecommendedTracks = async () => {
+const savePlaylistToDatabase = async (playlist) => {
+  try {
+    const response = await fetch("http://localhost:3000/api/playlists", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(playlist),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to save playlist to database");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error saving playlist to database:", error);
+    throw error;
+  }
+};
+
+export const getRecommendedTracks = async (token) => {
   try {
     const userPlaylists = await spotifyApi.getUserPlaylists();
     const trackIds = [];
@@ -112,19 +131,18 @@ export const getRecommendedTracks = async () => {
       return [];
     }
 
-    const recommendations = await spotifyApi.getRecommendations({
-      seed_tracks: seedTracks,
-      limit: 20, // Number of recommended tracks
-    });
-
+    const recommendations = await fetchRecommendedTracks(
+      token,
+      seedTracks.join(",")
+    );
     console.log("Recommendations:", recommendations);
 
-    if (!recommendations.tracks || recommendations.tracks.length === 0) {
+    if (!recommendations || recommendations.length === 0) {
       console.error("No recommendations found.");
       return [];
     }
 
-    return recommendations.tracks.map((track) => ({
+    return recommendations.map((track) => ({
       id: track.id,
       name: track.name,
       artist: track.artists[0].name,

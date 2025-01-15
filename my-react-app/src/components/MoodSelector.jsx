@@ -14,7 +14,6 @@ const MoodSelector = ({ onMoodSelect }) => {
   const [selectedMood, setSelectedMood] = useState(null);
 
   const handleMoodClick = (mood) => {
-    console.log("Selected mood:", mood); // Add logging
     setSelectedMood(mood);
     onMoodSelect(mood);
   };

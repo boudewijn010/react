@@ -164,12 +164,6 @@ footer {
   height: 50px;
 }
 
-.mood-button.selected {
-  background-color: #4caf50;
-  color: white;
-  border-color: #4caf50;
-}
-
 /* Playlist Section */
 .playlist-section {
   width: 100%;
@@ -378,18 +372,4 @@ footer {
 
 .generate-button:hover {
   background-color: var(--accent-hover);
-}
-
-.playlist-section {
-  display: none;
-}
-
-/* .button.mood-button.selected {
-  background-color: #4caf50;
-  color: white;
-  border-color: #4caf50;
-} */
-
-#knop {
-  display: none;
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import MoodSelector from "./components/MoodSelector";
 import GenreSelector from "./components/GenreSelector";
-import RecommendedTracks from "./components/RecommendedTracks";
 import {
   generatePlaylist,
   savePlaylist,
@@ -17,9 +16,9 @@ function App() {
   const [mood, setMood] = useState(null);
   const [genres, setGenres] = useState([]);
   const [playlist, setPlaylist] = useState(null);
-  const [recommendedTracks, setRecommendedTracks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [spotifyPlaylists, setSpotifyPlaylists] = useState([]);
+  const [previousPlaylists, setPreviousPlaylists] = useState([]);
   const [token, setToken] = useState(null);
   const [featuredPlaylists, setFeaturedPlaylists] = useState(null);
 
@@ -28,31 +27,29 @@ function App() {
   const AUTH_URL = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-read-private%20playlist-modify-private%20playlist-modify-public`;
 
   useEffect(() => {
-    if (!token) {
-      const hash = window.location.hash;
-      let token = window.localStorage.getItem("token");
+    const hash = window.location.hash;
+    let _token = window.localStorage.getItem("token");
 
-      if (!token && hash) {
-        token = hash
-          .substring(1)
-          .split("&")
-          .find((elem) => elem.startsWith("access_token"))
-          .split("=")[1];
-
-        window.location.hash = "";
-        window.localStorage.setItem("token", token);
-      }
-
-      setToken(token);
-      spotifyApi.setAccessToken(token);
+    if (!_token && hash) {
+      _token = hash.split("&")[0].split("=")[1];
+      window.localStorage.setItem("token", _token);
+      window.location.hash = ""; // Clear hash
     }
-  }, [token]);
+
+    if (_token) {
+      setToken(_token);
+      spotifyApi.setAccessToken(_token);
+    } else {
+      window.location.href = AUTH_URL; // Redirect to Spotify login
+    }
+  }, []);
 
   useEffect(() => {
     if (token) {
       fetchPlaylists();
       fetchFeaturedPlaylists();
-      fetchRecommendedTracks();
+      fetchPreviousPlaylists();
+      fetchRecommendedTracks(token);
     }
   }, [token]);
 
@@ -92,9 +89,22 @@ function App() {
     }
   };
 
-  const fetchRecommendedTracks = async () => {
+  const fetchPreviousPlaylists = async () => {
     try {
-      const tracks = await getRecommendedTracks();
+      const response = await fetch("/api/playlists");
+      if (!response.ok) {
+        throw new Error("Failed to fetch previous playlists");
+      }
+      const data = await response.json();
+      setPreviousPlaylists(data);
+    } catch (error) {
+      console.error("Error fetching previous playlists:", error);
+    }
+  };
+
+  const fetchRecommendedTracks = async (token) => {
+    try {
+      const tracks = await getRecommendedTracks(token);
       console.log("Recommended tracks:", tracks);
       setRecommendedTracks(tracks);
     } catch (error) {
@@ -103,7 +113,6 @@ function App() {
   };
 
   const handleMoodSelect = (selectedMood) => {
-    console.log("Mood selected in App:", selectedMood); // Add logging
     setMood(selectedMood);
   };
 
@@ -150,6 +159,7 @@ function App() {
       const result = await savePlaylist(playlist);
       if (result.success) {
         alert("Afspeellijst opgeslagen!");
+        fetchPreviousPlaylists(); // Refresh previous playlists
       } else {
         throw new Error(result.error);
       }
@@ -183,10 +193,7 @@ function App() {
       ) : (
         <>
           <MoodSelector onMoodSelect={handleMoodSelect} />
-          <GenreSelector
-            onGenreSelect={handleGenreSelect}
-            onGenerate={handleGeneratePlaylist}
-          />
+          <GenreSelector onGenreSelect={handleGenreSelect} />
           <button
             onClick={handleGeneratePlaylist}
             disabled={isLoading}
@@ -240,7 +247,18 @@ function App() {
               <p>Loading...</p>
             )}
           </div>
-          <RecommendedTracks recommendedTracks={recommendedTracks} />
+          <div>
+            <h1>Previous Playlists</h1>
+            {previousPlaylists.length > 0 ? (
+              <ul>
+                {previousPlaylists.map((playlist) => (
+                  <li key={playlist.playlistId}>{playlist.title}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No previous playlists found.</p>
+            )}
+          </div>
         </>
       )}
     </div>
