@@ -47,6 +47,7 @@ function App() {
 
   useEffect(() => {
     if (token) {
+      spotifyApi.setAccessToken(token); // Ensure token is set before making API calls
       fetchPlaylists();
       fetchFeaturedPlaylists();
       fetchPreviousPlaylists();
@@ -55,6 +56,11 @@ function App() {
   }, [token]);
 
   const fetchPlaylists = async () => {
+    if (!token) {
+      alert("Token is missing. Please login again.");
+      window.location.href = AUTH_URL; // Redirect to Spotify login
+      return;
+    }
     try {
       const response = await spotifyApi.getUserPlaylists();
       if (response.items) {
@@ -63,30 +69,21 @@ function App() {
         console.error("No playlists found in API response.");
       }
     } catch (error) {
-      if (error.status === 401) {
-        alert("Token is expired or invalid. Please login again.");
-        window.localStorage.removeItem("token");
-        setToken(null);
-        window.location.href = AUTH_URL; // Redirect to Spotify login
-      } else {
-        console.error("Error fetching playlists:", error);
-      }
+      handleTokenError(error);
     }
   };
 
   const fetchFeaturedPlaylists = async () => {
+    if (!token) {
+      alert("Token is missing. Please login again.");
+      window.location.href = AUTH_URL; // Redirect to Spotify login
+      return;
+    }
     try {
       const playlists = await fetchSpotifyData("/browse/featured-playlists");
       setFeaturedPlaylists(playlists);
     } catch (error) {
-      if (error.status === 401) {
-        alert("Token is expired or invalid. Please login again.");
-        window.localStorage.removeItem("token");
-        setToken(null);
-        window.location.href = AUTH_URL; // Redirect to Spotify login
-      } else {
-        console.error("Error fetching Spotify data:", error);
-      }
+      handleTokenError(error);
     }
   };
 
@@ -104,12 +101,28 @@ function App() {
   };
 
   const fetchRecommendedTracks = async (token) => {
+    if (!token) {
+      alert("Token is missing. Please login again.");
+      window.location.href = AUTH_URL; // Redirect to Spotify login
+      return;
+    }
     try {
       const tracks = await getRecommendedTracks(token);
       console.log("Recommended tracks:", tracks);
       setRecommendedTracks(tracks);
     } catch (error) {
       console.error("Error fetching recommended tracks:", error);
+    }
+  };
+
+  const handleTokenError = (error) => {
+    if (error.status === 401) {
+      alert("Token is expired or invalid. Please login again.");
+      window.localStorage.removeItem("token");
+      setToken(null);
+      window.location.href = AUTH_URL; // Redirect to Spotify login
+    } else {
+      console.error("Error:", error);
     }
   };
 

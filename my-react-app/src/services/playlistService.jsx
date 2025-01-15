@@ -123,9 +123,12 @@ export const getRecommendedTracks = async (token) => {
       return [];
     }
 
+    const seedTracksString = seedTracks.join(",");
+    console.log("Seed tracks string:", seedTracksString); // Add logging
+
     const recommendations = await fetchRecommendedTracks(
       token,
-      seedTracks.join(",")
+      seedTracksString
     );
     console.log("Recommendations:", recommendations);
 
